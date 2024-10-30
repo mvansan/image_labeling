@@ -1,0 +1,240 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labeling</title>
+    <style>
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            position: relative;
+        }
+
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 800px;
+        }
+
+        .title {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            height: 500px;
+            width: 100%;
+            max-width: 700px;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+
+        .random-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .captions {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .captions p {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            font-size: 16px;
+        }
+
+        .caption-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .caption-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        .submit-btn {
+            padding: 12px 25px;
+            font-size: 16px;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .error-msg {
+            color: red;
+            margin-top: 10px;
+        }
+
+        .help-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .help-btn:hover {
+            background-color: #218838;
+        }
+
+        .modal {
+            display: none; 
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 500px;
+            margin: auto;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <button class="help-btn" id="helpBtn">Hướng Dẫn</button>
+
+        {% if image %}
+        <h1 class="title">Gắn nhãn</h1>
+
+        <div class="image-container">
+            <img src="{{ image.image_url }}" alt="Random Image" class="random-image">
+        </div>
+
+        {% if captions %}
+        <div class="captions">
+            <h2>Existing Captions:</h2>
+            {% for caption in captions %}
+            <p>{{ forloop.counter }}. {{ caption }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST" class="caption-form">
+            {% csrf_token %}
+            <label for="caption" style="margin-bottom: 10px; display: block;">Enter a caption:</label>
+            <input type="text" name="caption" id="caption" class="caption-input" required>
+
+            {% if form.errors %}
+            <div class="error-msg">
+                {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <button type="submit" class="submit-btn">Submit</button>
+        </form>
+        {% else %}
+        <p>No image available for labeling.</p>
+        {% endif %}
+    </div>
+
+    <!-- Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <h2>Hướng dẫn gắn nhãn ảnh</h2>
+            <p>Để gắn nhãn ảnh, bạn chỉ cần nhập caption vào ô bên dưới ảnh và nhấn nút "Submit".</p>
+            <p>Đảm bảo rằng caption của bạn không quá dài và không để trống.</p>
+            <p>Gắn nhãn đơn giản các bạn chỉ cần mô tả giúp mình về bức ảnh đó thành 1 câu có nghĩa, 
+                có thể mô tả hành động, khung cảnh, màu sắc (quần áo, màu lông động vật), số lượng vật thể (người, động vật,...),....<br>
+            VD: 2 người đàn ông mặc áo trắng đang chơi đá bóng <br>
+                Trong 1 caption không nhất thiết phải chứa tất cả các trường thông tin mình ví dụ phía trên</p>
+            <p>Cảm ơn bạn đã giúp đỡ!</p>
+        </div>  
+    </div>
+
+    <script>
+        const helpBtn = document.getElementById('helpBtn');
+        const modal = document.getElementById('myModal');
+        const closeModal = document.getElementById('closeModal');
+
+        helpBtn.onclick = function() {
+            modal.style.display = "flex"; 
+        }
+
+        closeModal.onclick = function() {
+            modal.style.display = "none"; 
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none"; 
+            }
+        }
+    </script>
+</body>
+
+</html>
